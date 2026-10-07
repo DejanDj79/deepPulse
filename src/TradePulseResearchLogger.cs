@@ -54,6 +54,7 @@ namespace DeepPulse
 
         private IvbOrbDetector detector;
         private TradePulseTradeState activeTrade;
+        private DateTime? activeResearchSession;
         private int loggedSnapshotCount;
 
         public override void OnSet(bool setDefault, bool themeOverride)
@@ -71,6 +72,7 @@ namespace DeepPulse
                 FirstBreakoutOnly);
 
             activeTrade = null;
+            activeResearchSession = null;
             loggedSnapshotCount = 0;
             StatusMessage = "Research mode: no Pulse score. IVB virtual entries + raw snapshots only.";
         }
@@ -83,6 +85,13 @@ namespace DeepPulse
             // Premarket/overnight data is intentionally ignored by this first experiment.
             if (exchangeTime < rthStart)
                 return;
+
+            if (!activeResearchSession.HasValue || activeResearchSession.Value != rthStart)
+            {
+                activeResearchSession = rthStart;
+                activeTrade = null;
+                loggedSnapshotCount = 0;
+            }
 
             if (detector.ProcessTick(exchangeTime, rthStart, tick.PinT, out var breakout))
             {
